@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Dashboard | ShipChain</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="topbar"><a class="brand" href="index.html">🚚 ShipChain</a><nav><a href="index.html">Home</a><a href="create-shipment.html">Create Shipment</a><a href="tracking.html">Track</a><a class="active" href="dashboard.html">Dashboard</a></nav></header>
+<main class="page">
+  <div class="page-title row"><div><span class="eyebrow">OPERATIONS</span><h1>Shipment dashboard</h1><p>Prototype operations view.</p></div><a class="btn primary" href="create-shipment.html">+ New Shipment</a></div>
+  <div class="stats"><div class="stat"><span>Total</span><b id="total">0</b></div><div class="stat"><span>In transit</span><b id="transit">0</b></div><div class="stat"><span>Delivered</span><b id="delivered">0</b></div><div class="stat"><span>Blockchain</span><b>Ready</b></div></div>
+  <div class="panel table-wrap"><div class="table-head"><h2>Recent shipments</h2><button class="btn small secondary" onclick="clearShipments()">Clear demo data</button></div><div id="shipmentTable"></div></div>
+</main>
+<footer>© 2026 ShipChain</footer>
+<script src="script.js"></script><script>renderDashboard();</script>
+</body>
+</html>
