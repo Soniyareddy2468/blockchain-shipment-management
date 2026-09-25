@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Shipment | ShipChain</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar"><a class="brand" href="index.html">🚚 ShipChain</a><nav><a href="index.html">Home</a><a class="active" href="create-shipment.html">Create Shipment</a><a href="tracking.html">Track</a><a href="dashboard.html">Dashboard</a></nav></header>
+<main class="page">
+  <div class="page-title"><span class="eyebrow">SHIPMENT MANAGEMENT</span><h1>Create a shipment</h1><p>Enter the shipment details. The prototype stores the record locally in your browser.</p></div>
+  <div class="form-layout">
+    <form id="shipmentForm" class="panel">
+      <label>Sender name<input id="sender" required placeholder="ABC Electronics"></label>
+      <label>Receiver name<input id="receiver" required placeholder="Customer name"></label>
+      <label>Product<input id="product" required placeholder="Laptop"></label>
+      <div class="two">
+        <label>Source<input id="source" required placeholder="Bengaluru"></label>
+        <label>Destination<input id="destination" required placeholder="Mysuru"></label>
+      </div>
+      <div class="two">
+        <label>Transport mode<select id="mode"><option>Road</option><option>Rail</option><option>Air</option></select></label>
+        <label>Expected delivery<input id="delivery" type="date" required></label>
+      </div>
+      <button class="btn primary full" type="submit">Create Shipment</button>
+    </form>
+    <aside class="panel info"><h3>What happens next?</h3><p>1. A unique shipment ID is generated.</p><p>2. A tracking timeline is created.</p><p>3. The record appears on the dashboard.</p><p>4. The architecture is ready for a future blockchain transaction.</p></aside>
+  </div>
+  <div id="success" class="success hidden"></div>
+</main>
+<footer>© 2026 ShipChain</footer>
+<script src="script.js"></script>
+</body>
+</html>
