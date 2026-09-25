@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Track Shipment | ShipChain</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header class="topbar"><a class="brand" href="index.html">🚚 ShipChain</a><nav><a href="index.html">Home</a><a href="create-shipment.html">Create Shipment</a><a class="active" href="tracking.html">Track</a><a href="dashboard.html">Dashboard</a></nav></header>
+<main class="page">
+  <div class="page-title"><span class="eyebrow">TRACKING</span><h1>Track a shipment</h1><p>Enter a ShipChain shipment ID to view its timeline.</p></div>
+  <form id="trackingForm" class="search-box"><input id="shipmentId" required placeholder="Example: SHP-123456"><button class="btn primary">Track</button></form>
+  <div id="trackingResult"></div>
+</main>
+<footer>© 2026 ShipChain</footer>
+<script src="script.js"></script>
+<script>
+const params=new URLSearchParams(location.search); if(params.get("id")){document.getElementById("shipmentId").value=params.get("id"); document.getElementById("trackingForm").requestSubmit();}
+</script>
+</body>
+</html>
