@@ -1,0 +1,11 @@
+const fs=require('fs');const path=require('path');
+const dbPath=path.join(__dirname,`shipchain-test-${process.pid}.db`);
+if(fs.existsSync(dbPath))fs.unlinkSync(dbPath);
+process.env.NODE_ENV='test';
+process.env.DB_FILE=dbPath;
+process.env.JWT_SECRET='shipchain-test-secret';
+process.env.BLOCKCHAIN_RPC_URL='';
+process.env.BLOCKCHAIN_PRIVATE_KEY='';
+process.env.CONTRACT_ADDRESS='';
+process.env.CONTRACT_ABI='';
+global.__shipchainTestDbPath=dbPath;
