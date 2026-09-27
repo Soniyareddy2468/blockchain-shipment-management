@@ -1,5 +1,6 @@
-const request=require('supertest');
+const supertest=require('supertest');
 const {app}=require('../../server');
+const request=supertest(app);
 const {USERS,SHIPMENT_A,login,createShipment,moveToOutForDelivery,requestOtp,confirmPod,TEST_SIGNATURE,TEST_PHOTO}=require('./fixtures');
 
 let tokens,shipment;
