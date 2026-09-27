@@ -1,30 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Scan Shipment | ShipChain</title>
-<link rel="stylesheet" href="style.css">
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-</head>
-<body>
-<header class="topbar"><a class="brand" href="index.html">🚚 ShipChain</a><nav><a href="index.html">Home</a><a href="create-shipment.html">Create Shipment</a><a href="tracking.html">Track</a><a class="active" href="scan.html">Scan</a><a href="dashboard.html">Dashboard</a></nav></header>
-<main class="page"><div class="page-title"><span class="eyebrow">SHIPMENT SCANNER</span><h1>Scan shipment QR</h1><p>Point your phone camera at a ShipChain QR label. After a valid code is detected, the public tracking page opens automatically.</p></div>
-<section class="panel scanner-panel"><div id="qr-reader" style="width:100%;max-width:560px;margin:auto"></div><div id="scanStatus" class="scan-status">Camera is ready when you start scanning.</div><div class="scanner-actions"><button id="startScan" class="btn primary">Start Camera</button><button id="stopScan" class="btn secondary" disabled>Stop Camera</button></div><p class="scanner-note">Camera access requires HTTPS (or localhost). If permission is denied, use the shipment ID on the <a href="tracking.html">tracking page</a>.</p></section></main>
-<footer>© 2026 ShipChain</footer>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Scan Shipment | ShipChain</title><link rel="stylesheet" href="style.css"><script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script></head>
+<body><header class="topbar"><a class="brand" href="index.html">🚚 ShipChain</a><nav><a href="index.html">Home</a><a href="create-shipment.html">Create Shipment</a><a href="tracking.html">Track</a><a class="active" href="scan.html">Scan</a><a href="dashboard.html">Dashboard</a></nav></header>
+<main class="page"><div class="page-title"><span class="eyebrow">SHIPMENT SCANNER</span><h1>Scan shipment QR</h1><p>Scan a ShipChain label to open transporter controls for that shipment.</p></div><section class="panel scanner-panel"><div id="qr-reader" style="width:100%;max-width:560px;margin:auto"></div><div id="scanStatus" class="scan-status">Camera is ready when you start scanning.</div><div class="scanner-actions"><button id="startScan" class="btn primary">Start Camera</button><button id="stopScan" class="btn secondary" disabled>Stop Camera</button></div><p class="scanner-note">Camera access requires HTTPS (or localhost). A scanned shipment opens transporter controls; public tracking remains available from the shipment page.</p></section></main><footer>© 2026 ShipChain</footer>
 <script>
-let scanner=null, running=false;
-const statusBox=document.getElementById('scanStatus');
-function setStatus(t){statusBox.textContent=t;}
-function openResult(raw){
-  let target=raw;
-  try{const u=new URL(raw,location.href);if(u.protocol==='http:'||u.protocol==='https:'){const id=u.searchParams.get('id');if(u.pathname.endsWith('/tracking.html')&&id){target='tracking.html?id='+encodeURIComponent(id);}else if(u.origin===location.origin&&u.pathname.endsWith('/tracking.html')){target=u.href;}else{throw new Error('Invalid QR destination');}}else{throw new Error('Invalid QR destination');}}
-  catch(e){const m=String(raw).match(/(?:[?&]id=)([^&#\s]+)/i);if(m)target='tracking.html?id='+encodeURIComponent(decodeURIComponent(m[1]));else if(/^SHP-[A-Za-z0-9-]+$/i.test(String(raw).trim()))target='tracking.html?id='+encodeURIComponent(String(raw).trim());else{setStatus('QR detected, but it is not a ShipChain tracking code.');return;}}
-  if(running&&scanner){scanner.stop().catch(()=>{});running=false;}
-  location.href=target;
-}
-async function start(){if(running)return;scanner=new Html5Qrcode('qr-reader');setStatus('Requesting camera permission…');try{await scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250}},decodedText=>openResult(decodedText),()=>{});running=true;document.getElementById('startScan').disabled=true;document.getElementById('stopScan').disabled=false;setStatus('Scanning… hold the QR code inside the box.');}catch(e){setStatus('Unable to start camera. Allow camera permission and use HTTPS/localhost.');scanner=null;}}
-async function stop(){if(!scanner||!running)return;try{await scanner.stop();}catch(e){}running=false;document.getElementById('startScan').disabled=false;document.getElementById('stopScan').disabled=true;setStatus('Scanner stopped.');}
-document.getElementById('startScan').onclick=start;document.getElementById('stopScan').onclick=stop;
-window.addEventListener('beforeunload',()=>{if(scanner&&running)scanner.stop().catch(()=>{});});
-</script>
-</body></html>
+let scanner=null,running=false;const statusBox=document.getElementById('scanStatus');function setStatus(t){statusBox.textContent=t;}
+function openResult(raw){let id=null;try{const u=new URL(raw,location.href);if(u.pathname.endsWith('/tracking.html')||u.pathname.endsWith('/transporter.html'))id=u.searchParams.get('id');else if(u.origin===location.origin&&u.searchParams.get('id'))id=u.searchParams.get('id');}catch(e){}if(!id){const m=String(raw).match(/(?:[?&]id=)([^&#\s]+)/i);if(m)id=decodeURIComponent(m[1]);else if(/^SHP-[A-Za-z0-9-]+$/i.test(String(raw).trim()))id=String(raw).trim();}if(!id){setStatus('QR detected, but it is not a ShipChain tracking code.');return;}if(running&&scanner){scanner.stop().catch(()=>{});running=false;}location.href='transporter.html?id='+encodeURIComponent(id);}
+async function start(){if(running)return;scanner=new Html5Qrcode('qr-reader');setStatus('Requesting camera permission…');try{await scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:250,height:250}},openResult,()=>{});running=true;startScan.disabled=true;stopScan.disabled=false;setStatus('Scanning… hold the QR code inside the box.');}catch(e){setStatus('Unable to start camera. Allow camera permission and use HTTPS/localhost.');scanner=null;}}
+async function stop(){if(!scanner||!running)return;try{await scanner.stop();}catch(e){}running=false;startScan.disabled=false;stopScan.disabled=true;setStatus('Scanner stopped.');}
+startScan.onclick=start;stopScan.onclick=stop;window.addEventListener('beforeunload',()=>{if(scanner&&running)scanner.stop().catch(()=>{});});
+</script></body></html>
