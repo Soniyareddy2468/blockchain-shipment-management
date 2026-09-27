@@ -1,9 +1,9 @@
 module.exports={
   rootDir:'.',
   testEnvironment:'node',
-  testMatch:['integration/**/*.test.js'],
-  setupFiles:['integration/env.js'],
-  setupFilesAfterEnv:['integration/setup.js'],
+  testMatch:['<rootDir>/integration/**/*.test.js'],
+  setupFiles:['<rootDir>/integration/env.js'],
+  setupFilesAfterEnv:['<rootDir>/integration/setup.js'],
   testTimeout:15000,
   clearMocks:true,
   restoreMocks:true
