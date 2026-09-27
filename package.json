@@ -1,6 +1,6 @@
 {
   "name":"shipchain","version":"1.0.0","private":true,"description":"ShipChain blockchain shipment management platform",
   "scripts":{"start":"node server.js","dev":"node --watch server.js","chain:node":"hardhat node","chain:compile":"hardhat compile","chain:deploy":"hardhat run scripts/deploy.js --network localhost"},
-  "dependencies":{"bcryptjs":"^2.4.3","better-sqlite3":"^11.7.0","cors":"^2.8.5","dotenv":"^16.4.7","express":"^4.21.2","jsonwebtoken":"^9.0.2","uuid":"^11.0.5"},
+  "dependencies":{"bcryptjs":"^2.4.3","better-sqlite3":"^11.7.0","cors":"^2.8.5","dotenv":"^16.4.7","ethers":"^6.13.5","express":"^4.21.2","jsonwebtoken":"^9.0.2","uuid":"^11.0.0"},
   "devDependencies":{"@nomicfoundation/hardhat-toolbox":"^5.0.0","hardhat":"^2.22.18"}
 }
