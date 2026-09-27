@@ -30,6 +30,7 @@ jobs:
           path: npm-audit.json
           if-no-files-found: error
 
+      # Run the complete integration suite, including OTP and shipment lifecycle tests.
       - name: Run integration tests
         run: npx jest integration --config tests/jest.config.js --runInBand
         env:
