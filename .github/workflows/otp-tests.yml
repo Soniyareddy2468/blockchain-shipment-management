@@ -30,8 +30,8 @@ jobs:
           path: npm-audit.json
           if-no-files-found: error
 
-      - name: Run focused OTP integration tests
-        run: npx jest integration/otp.test.js --config tests/jest.config.js --runInBand
+      - name: Run integration tests
+        run: npx jest integration --config tests/jest.config.js --runInBand
         env:
           NODE_ENV: test
           JWT_SECRET: shipchain-ci-test-secret
