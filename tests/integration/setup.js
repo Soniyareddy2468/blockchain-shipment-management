@@ -14,7 +14,6 @@ function seed(db){
 }
 
 beforeAll(()=>{
-  if(fs.existsSync(dbPath))fs.unlinkSync(dbPath);
   const {app,db}=require('../../server');
   app.locals.db=db;
   global.__shipchainApp=app;
