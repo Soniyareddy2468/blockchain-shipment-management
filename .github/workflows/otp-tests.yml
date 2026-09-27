@@ -1,0 +1,29 @@
+name: OTP Integration Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  otp-integration:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run focused OTP integration tests
+        run: npx jest tests/integration/otp.test.js --config tests/jest.config.js --runInBand
+        env:
+          NODE_ENV: test
+          JWT_SECRET: shipchain-ci-test-secret
+          DB_FILE: ./shipchain-ci-test.db
