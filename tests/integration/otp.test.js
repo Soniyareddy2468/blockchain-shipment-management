@@ -30,7 +30,7 @@ describe('OTP hardening',()=>{
     expect(sent.status).toBe(200);
     const response=await confirmPod(request,tokens.receiver,shipment.id,{otp,signature:TEST_SIGNATURE,photo:TEST_PHOTO});
     expect(response.status).toBe(400);
-    expect(response.body.error).toBe('Invalid OTP');
+    expect(response.body.error).toBe('OTP must be exactly 6 numeric digits');
   });
 
   test('rejects an expired OTP',async()=>{
