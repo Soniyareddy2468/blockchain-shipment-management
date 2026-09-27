@@ -20,6 +20,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Generate npm audit report
+        run: npm audit --json > npm-audit.json || true
+
+      - name: Upload npm audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: npm-audit.json
+          if-no-files-found: error
+
       - name: Run focused OTP integration tests
         run: npx jest integration/otp.test.js --config tests/jest.config.js --runInBand
         env:
