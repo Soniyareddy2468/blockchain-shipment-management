@@ -1,24 +1,25 @@
 # ShipChain — Blockchain-Based Shipment Management System
 
-ShipChain is a startup-style shipment management platform for secure logistics tracking, verifiable shipment events and future AI-powered delay prediction.
+ShipChain is a full-stack shipment management platform combining operational tracking, role-based authentication, blockchain verification and an AI-style delay-risk service.
 
 ## Implemented
 
-- Responsive landing page
-- Create shipment workflow
+- Responsive landing page and operations dashboard
 - Persistent Node.js/Express REST API
-- SQLite database for users, shipments and events
+- SQLite database for users, shipments and shipment events
 - JWT authentication and role-based registration
-- Shipment tracking timeline
-- Operations dashboard and statistics API
-- Browser-local fallback for static/demo hosting
+- Shipment creation, tracking and milestone updates
 - Solidity `ShipmentRegistry` smart contract
-- Hardhat local blockchain configuration and deployment script
-- Blockchain-ready shipment verification model
+- Ethers.js integration for optional on-chain registration and updates
+- Transaction-hash persistence and blockchain verification endpoint
+- AI delay-risk endpoint with explainable risk score
+- QR-ready public tracking page
+- Browser-local fallback for static/demo hosting
+- Hardhat local blockchain configuration
 
 ## Architecture
 
-`Browser → Express API → SQLite` for operational data, with `ShipmentRegistry.sol` providing the tamper-evident blockchain layer. The next integration step is to connect API shipment events to a deployed contract and persist transaction hashes.
+`Browser → Express API → SQLite` handles operational data. `Express API → Ethers.js → ShipmentRegistry.sol` provides the tamper-evident blockchain layer when a wallet, RPC endpoint and deployed contract are configured.
 
 ## Run locally
 
@@ -43,29 +44,31 @@ npm run chain:compile
 npm run chain:deploy
 ```
 
-The contract is in `contracts/ShipmentRegistry.sol`.
+After deployment, configure the contract address and RPC/wallet values in `.env`.
 
 ## API highlights
 
-- `POST /api/auth/register` — create an operator account
+- `POST /api/auth/register` — create an account
 - `POST /api/auth/login` — receive a JWT
 - `GET /api/shipments` — list shipments
 - `GET /api/shipments/:id` — public tracking lookup
 - `POST /api/shipments` — authenticated shipment creation
-- `PATCH /api/shipments/:id/status` — authenticated milestone update
+- `PATCH /api/shipments/:id/status` — authenticated milestone update and optional blockchain write
+- `GET /api/shipments/:id/verify` — blockchain verification status
+- `GET /api/shipments/:id/risk` — explainable AI-style delay-risk score
 - `GET /api/stats` — dashboard metrics
 - `GET /api/health` — service health check
 
-## Roadmap
+## Production roadmap
 
-1. Connect API events to the deployed smart contract and store transaction hashes
-2. QR-code shipment labels and scan workflow
-3. Proof of delivery using OTP/signature/photo
-4. Python/FastAPI AI delay-risk prediction
-5. Notifications and logistics/Maps integrations
-6. Cloud deployment with managed PostgreSQL
-7. Automated tests and CI/CD
+1. Add proof of delivery with OTP, signature and photo upload
+2. Add real QR labels/scan workflow to shipment creation
+3. Replace heuristic risk service with a trained Python/FastAPI model
+4. Add email/SMS notifications and Maps/GPS integrations
+5. Move SQLite to managed PostgreSQL
+6. Add automated unit/API tests and CI/CD
+7. Deploy frontend/API and configure production secrets
 
 ## Security
 
-Never commit passwords, JWT secrets, API keys, wallet private keys or sensitive customer data. Set `JWT_SECRET` in `.env` for production.
+Never commit passwords, JWT secrets, API keys, wallet private keys or sensitive customer data. Use environment variables for production secrets. The blockchain private key must never be placed in frontend code or committed to GitHub.
