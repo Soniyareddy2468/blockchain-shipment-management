@@ -1,8 +1,31 @@
-const fs=require('fs');const path=require('path');const bcrypt=require('bcryptjs');const Database=require('better-sqlite3');
+const fs=require('fs');const path=require('path');const bcrypt=require('bcryptjs');
 const dbPath=path.join(__dirname,`shipchain-test-${process.pid}.db`);
 process.env.NODE_ENV='test';process.env.DB_FILE=dbPath;process.env.JWT_SECRET='shipchain-test-secret';
 const {USERS}=require('./fixtures');
-function schema(db){db.exec(`CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,password TEXT NOT NULL,role TEXT NOT NULL DEFAULT 'operator',created_at TEXT NOT NULL);CREATE TABLE IF NOT EXISTS shipments(id TEXT PRIMARY KEY,sender TEXT NOT NULL,receiver TEXT NOT NULL,product TEXT NOT NULL,source TEXT NOT NULL,destination TEXT NOT NULL,mode TEXT NOT NULL,delivery TEXT NOT NULL,status TEXT NOT NULL,created_at TEXT NOT NULL,blockchain_hash TEXT,blockchain_status TEXT DEFAULT 'Pending',pod_status TEXT DEFAULT 'Pending',pod_verified_at TEXT,pod_otp_hash TEXT,pod_otp_expires TEXT,pod_attempts INTEGER DEFAULT 0,pod_signature TEXT,pod_photo TEXT,pod_photo_hash TEXT,receiver_user_id TEXT);CREATE TABLE IF NOT EXISTS events(id TEXT PRIMARY KEY,shipment_id TEXT NOT NULL,status TEXT NOT NULL,location TEXT,time TEXT,verified INTEGER DEFAULT 0,tx_hash TEXT,FOREIGN KEY(shipment_id) REFERENCES shipments(id));`)}
-function seed(db){const now=new Date().toISOString(),insert=db.prepare('INSERT INTO users(id,email,password,role,created_at) VALUES(?,?,?,?,?)');for(const user of Object.values(USERS)){const id=require('crypto').randomUUID();insert.run(id,user.email,bcrypt.hashSync(user.password,10),user.role,now);user.id=id;}}
-beforeAll(()=>{if(fs.existsSync(dbPath))fs.unlinkSync(dbPath);const db=new Database(dbPath);schema(db);seed(db);db.close();const {app}=require('../../server');app.locals.db=new Database(dbPath);global.__shipchainApp=app;global.__shipchainTestDb=app.locals.db;});
-afterAll(()=>{try{if(global.__shipchainApp&&global.__shipchainApp.locals.db)global.__shipchainApp.locals.db.close();}finally{if(fs.existsSync(dbPath))fs.unlinkSync(dbPath);}});
+
+function seed(db){
+  const now=new Date().toISOString();
+  const insert=db.prepare('INSERT INTO users(id,email,password,role,created_at) VALUES(?,?,?,?,?)');
+  for(const user of Object.values(USERS)){
+    const id=require('crypto').randomUUID();
+    insert.run(id,user.email,bcrypt.hashSync(user.password,10),user.role,now);
+    user.id=id;
+  }
+}
+
+beforeAll(()=>{
+  if(fs.existsSync(dbPath))fs.unlinkSync(dbPath);
+  const {app,db}=require('../../server');
+  app.locals.db=db;
+  global.__shipchainApp=app;
+  global.__shipchainTestDb=db;
+  seed(db);
+});
+
+afterAll(()=>{
+  try{
+    if(global.__shipchainTestDb)global.__shipchainTestDb.close();
+  }finally{
+    if(fs.existsSync(dbPath))fs.unlinkSync(dbPath);
+  }
+});
