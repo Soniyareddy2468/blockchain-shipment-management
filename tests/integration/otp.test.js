@@ -1,7 +1,7 @@
 const supertest=require('supertest');
 const {app}=require('../../server');
 const request=supertest(app);
-const {USERS,SHIPMENT_A,login,createShipment,moveToOutForDelivery,requestOtp,confirmPod,TEST_SIGNATURE,TEST_PHOTO}=require('./fixtures');
+const {USERS,SHIPMENT_A,login,createShipment,updateStatus,moveToOutForDelivery,requestOtp,confirmPod,TEST_SIGNATURE,TEST_PHOTO}=require('./fixtures');
 
 let tokens,shipment;
 
@@ -75,6 +75,57 @@ describe('OTP hardening',()=>{
     const replay=await confirmPod(request,tokens.receiver,shipment.id,{otp:sent.body.demoOtp,signature:TEST_SIGNATURE,photo:TEST_PHOTO});
     expect(replay.status).toBe(400);
     expect(replay.body.error).toBe('Proof of delivery already verified');
+  });
+});
+
+describe('Shipment lifecycle',()=>{
+  test('completes creation, OTP verification, status updates, and delivery',async()=>{
+    const lifecycleTokens={
+      operator:await login(request,USERS.operator.email,USERS.operator.password),
+      transporter:await login(request,USERS.transporter.email,USERS.transporter.password),
+      receiver:await login(request,USERS.receiverA.email,USERS.receiverA.password)
+    };
+
+    const created=await createShipment(request,lifecycleTokens.operator,{...SHIPMENT_A,receiverUserId:USERS.receiverA.id});
+    expect(created.status).toBe(201);
+    const id=created.body.id;
+    expect(created.body.status).toBe('Created');
+
+    for(const [status,location] of [
+      ['Picked Up','Bengaluru'],
+      ['In Transit','Bengaluru'],
+      ['Arrived at Hub','Mysuru Hub'],
+      ['Out for Delivery','Mysuru']
+    ]){
+      const updated=await updateStatus(request,lifecycleTokens.transporter,id,status,location);
+      expect(updated.status).toBe(200);
+      expect(updated.body.status).toBe(status);
+      const event=updated.body.events.find(e=>e.status===status);
+      expect(event.time).toBeTruthy();
+      expect(event.location).toBe(location);
+    }
+
+    const sent=await requestOtp(request,lifecycleTokens.receiver,id);
+    expect(sent.status).toBe(200);
+    expect(sent.body.demoOtp).toMatch(/^\d{6}$/);
+
+    const completed=await confirmPod(request,lifecycleTokens.receiver,id,{
+      otp:sent.body.demoOtp,
+      signature:TEST_SIGNATURE,
+      photo:TEST_PHOTO
+    });
+    expect(completed.status).toBe(200);
+    expect(completed.body.shipment.status).toBe('Delivered');
+    expect(completed.body.shipment.pod_status).toBe('Verified');
+
+    const final=await request.get(`/api/shipments/${id}`);
+    expect(final.status).toBe(200);
+    expect(final.body.status).toBe('Delivered');
+    expect(final.body.pod_status).toBe('Verified');
+    const deliveredEvent=final.body.events.find(e=>e.status==='Delivered');
+    expect(deliveredEvent.time).toBeTruthy();
+    expect(deliveredEvent.location).toBe(SHIPMENT_A.destination);
+    expect(deliveredEvent.verified).toBe(true);
   });
 });
 
