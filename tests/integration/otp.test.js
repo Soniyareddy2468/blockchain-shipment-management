@@ -1,6 +1,6 @@
 const request=require('supertest');
 const {app}=require('../../server');
-const {USERS,SHIPMENT_A,login,createShipment,updateStatus,moveToOutForDelivery,requestOtp,confirmPod,TEST_SIGNATURE,TEST_PHOTO}=require('./fixtures');
+const {USERS,SHIPMENT_A,login,createShipment,moveToOutForDelivery,requestOtp,confirmPod,TEST_SIGNATURE,TEST_PHOTO}=require('./fixtures');
 
 let tokens,shipment;
 
@@ -35,8 +35,7 @@ describe('OTP hardening',()=>{
   test('rejects an expired OTP',async()=>{
     const sent=await requestOtp(request,tokens.receiver,shipment.id);
     expect(sent.status).toBe(200);
-    const db=app.locals.db||require('../../server').db;
-    db.prepare('UPDATE shipments SET pod_otp_expires=? WHERE id=?').run(new Date(Date.now()-1000).toISOString(),shipment.id);
+    app.locals.db.prepare('UPDATE shipments SET pod_otp_expires=? WHERE id=?').run(new Date(Date.now()-1000).toISOString(),shipment.id);
     const response=await confirmPod(request,tokens.receiver,shipment.id,{otp:sent.body.demoOtp,signature:TEST_SIGNATURE,photo:TEST_PHOTO});
     expect(response.status).toBe(400);
     expect(response.body.error).toBe('OTP expired');
@@ -47,11 +46,11 @@ describe('OTP hardening',()=>{
     expect(first.status).toBe(200);
     const second=await requestOtp(request,tokens.receiver,shipment.id);
     expect(second.status).toBe(200);
-    const oldOtp=first.body.demoOtp;
-    const response=await confirmPod(request,tokens.receiver,shipment.id,{otp:oldOtp,signature:TEST_SIGNATURE,photo:TEST_PHOTO});
+    const response=await confirmPod(request,tokens.receiver,shipment.id,{otp:first.body.demoOtp,signature:TEST_SIGNATURE,photo:TEST_PHOTO});
     expect(response.status).toBe(400);
     expect(response.body.error).toBe('Invalid OTP');
-    expect((await confirmPod(request,tokens.receiver,shipment.id,{otp:second.body.demoOtp,signature:TEST_SIGNATURE,photo:TEST_PHOTO})).status).toBe(200);
+    const completed=await confirmPod(request,tokens.receiver,shipment.id,{otp:second.body.demoOtp,signature:TEST_SIGNATURE,photo:TEST_PHOTO});
+    expect(completed.status).toBe(200);
   });
 
   test('locks after five failed attempts before checking the OTP',async()=>{
