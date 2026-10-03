@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI Shipping Assistant | ShipChain</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.ai-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.ai-card{background:#fff;border:1px solid #e6eaf0;border-radius:18px;padding:24px;box-shadow:0 10px 30px rgba(20,30,50,.06)}.ai-card h2{margin-top:0}.ai-card input,.ai-card select,.ai-card textarea{width:100%;box-sizing:border-box;padding:12px;border:1px solid #d8dee8;border-radius:10px;margin:7px 0 14px}.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.chip{border:1px solid #d8dee8;background:#f7f9fc;border-radius:999px;padding:8px 12px;cursor:pointer}.result{margin-top:16px;padding:16px;border-radius:12px;background:#f5f8fc}.chat{height:360px;overflow:auto;background:#f7f9fc;border-radius:14px;padding:14px}.msg{max-width:82%;padding:11px 14px;border-radius:14px;margin:8px 0;line-height:1.45}.bot{background:#e9f0ff}.user{background:#dff7e8;margin-left:auto}.chat-row{display:flex;gap:8px;margin-top:12px}.chat-row input{margin:0}.muted{color:#667085}.ok{font-weight:700}.packing-list{margin:8px 0 0 18px;padding:0}.packing-list li{margin:7px 0}
+@media(max-width:800px){.ai-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="index.html">🚚 ShipChain</a><nav><a href="dashboard.html">Dashboard</a><a class="active" href="smart-ai.html">AI Assistant</a><a href="create-shipment.html">Create Shipment</a><a href="tracking.html">Track</a></nav></header>
+<main class="page">
+<div class="page-title"><span class="eyebrow">SMART LOGISTICS AI</span><h1>AI Shipping Assistant</h1><p>Get practical packing recommendations and shipment answers from your ShipChain data.</p></div>
+<div class="ai-grid">
+<section class="ai-card"><h2>📦 Smart Pack Advisor</h2><p class="muted">Enter the shipment details and get a packing plan, material checklist and handling advice.</p>
+<label>Product / item</label><input id="item" placeholder="e.g. glass bottles, electronics, clothes">
+<label>Weight (kg)</label><input id="weight" type="number" min="0" step="0.1" placeholder="5">
+<label>Fragility</label><select id="fragility"><option>Normal</option><option>Fragile</option><option>Very fragile</option></select>
+<label>Transport mode</label><select id="packMode"><option>Road</option><option>Air</option><option>Rail</option><option>Sea</option></select>
+<label>Weather / special condition</label><select id="weather"><option>Normal</option><option>Rain / moisture</option><option>High heat</option><option>Cold / temperature-sensitive</option></select>
+<button class="btn primary" onclick="getPackingAdvice()">✨ Generate Smart Packing Plan</button><div id="packResult" class="result" style="display:none"></div></section>
+<section class="ai-card"><h2>🤖 AI Shipment Chatbot</h2><p class="muted">Ask about shipment status, delivery risk, tracking IDs, packing or blockchain verification.</p>
+<div id="chat" class="chat"><div class="msg bot">Hi! I'm ShipChain AI. Ask me something like <b>“Where is SHP-123456?”</b>, <b>“Is my shipment at risk?”</b> or <b>“How should I pack glass?”</b></div></div>
+<div class="chips"><button class="chip" onclick="quickAsk('Show my latest shipments')">Latest shipments</button><button class="chip" onclick="quickAsk('How do I pack fragile items?')">Pack fragile items</button><button class="chip" onclick="quickAsk('What is blockchain verification?')">Blockchain help</button></div>
+<div class="chat-row"><input id="chatInput" placeholder="Type your shipment question..." onkeydown="if(event.key==='Enter')sendChat()"><button class="btn primary" onclick="sendChat()">Send</button></div></section>
+</div></main><footer>© 2026 ShipChain · Smart logistics demo</footer>
+<script src="ai-assistant.js"></script>
+</body></html>
