@@ -10,9 +10,20 @@ contract ShipmentRegistry {
         address updatedBy;
     }
 
+    struct DeliverySignature {
+        string shipmentId;
+        bytes32 signatureHash;
+        uint256 timestamp;
+        bool exists;
+        address recordedBy;
+    }
+
     mapping(string => Shipment) public shipments;
+    mapping(string => DeliverySignature) public deliverySignatures;
+
     event ShipmentRegistered(string indexed shipmentId, string status, string location, uint256 timestamp, address indexed updatedBy);
     event ShipmentUpdated(string indexed shipmentId, string status, string location, uint256 timestamp, address indexed updatedBy);
+    event DeliverySignatureRecorded(string indexed shipmentId, bytes32 indexed signatureHash, uint256 timestamp, address indexed recordedBy);
 
     function registerShipment(string calldata shipmentId, string calldata location) external {
         require(shipments[shipmentId].timestamp == 0, "Shipment already exists");
@@ -27,6 +38,19 @@ contract ShipmentRegistry {
         shipments[shipmentId].timestamp = block.timestamp;
         shipments[shipmentId].updatedBy = msg.sender;
         emit ShipmentUpdated(shipmentId, status, location, block.timestamp, msg.sender);
+    }
+
+    function recordDeliverySignature(string calldata shipmentId, bytes32 signatureHash) external {
+        require(shipments[shipmentId].timestamp != 0, "Shipment not registered");
+        require(signatureHash != bytes32(0), "Invalid signature hash");
+        require(!deliverySignatures[shipmentId].exists, "Signature already recorded");
+        deliverySignatures[shipmentId] = DeliverySignature(shipmentId, signatureHash, block.timestamp, true, msg.sender);
+        emit DeliverySignatureRecorded(shipmentId, signatureHash, block.timestamp, msg.sender);
+    }
+
+    function verifyDeliverySignature(string calldata shipmentId) external view returns (bytes32, uint256, bool, address) {
+        DeliverySignature memory d = deliverySignatures[shipmentId];
+        return (d.signatureHash, d.timestamp, d.exists, d.recordedBy);
     }
 
     function verifyShipment(string calldata shipmentId) external view returns (string memory, string memory, uint256, address) {
