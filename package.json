@@ -4,8 +4,8 @@
   "private": true,
   "description": "ShipChain blockchain shipment management platform",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
+    "start": "node -r ./blockchain-signature-bootstrap.js server.js",
+    "dev": "node -r ./blockchain-signature-bootstrap.js --watch server.js",
     "chain:node": "hardhat node",
     "chain:compile": "hardhat compile",
     "chain:deploy": "hardhat run scripts/deploy.js --network localhost",
