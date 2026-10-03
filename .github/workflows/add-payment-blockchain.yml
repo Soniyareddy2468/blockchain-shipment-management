@@ -1,0 +1,51 @@
+name: Add blockchain payment integration
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch server
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('server.js')
+          s=p.read_text()
+          if 'CREATE TABLE IF NOT EXISTS payments' not in s:
+              marker='db.exec(`CREATE TABLE IF NOT EXISTS users'
+              i=s.index(marker)
+              end=s.index('`);', i)+3
+              s=s[:end]+"\ndb.exec(`CREATE TABLE IF NOT EXISTS payments(id TEXT PRIMARY KEY,shipment_id TEXT NOT NULL,customer TEXT NOT NULL,email TEXT NOT NULL,amount REAL NOT NULL,method TEXT NOT NULL,status TEXT NOT NULL,transaction_id TEXT NOT NULL,invoice_id TEXT NOT NULL,blockchain_tx_hash TEXT,blockchain_status TEXT DEFAULT 'Pending',blockchain_timestamp TEXT,blockchain_block INTEGER,payment_hash TEXT,created_at TEXT NOT NULL,FOREIGN KEY(shipment_id) REFERENCES shipments(id));`);"+s[end:]
+          if 'function recordPaymentOnChain' not in s:
+              marker='function recordSignatureOnChain('
+              i=s.index(marker)
+              # Insert after the complete function by locating the next app.get health route.
+              j=s.index("app.get('/api/health'", i)
+              fn="""\nasync function recordPaymentOnChain(payment){const c=chain();if(!c)return{enabled:false};try{let registered=false;try{const sh=await c.shipments(payment.shipmentId);registered=Number(sh[3])>0}catch(e){}if(!registered){const r=await (await c.registerShipment(payment.shipmentId,'' )).wait();}const paymentHash=ethers.id([payment.paymentId,payment.shipmentId,String(payment.amount),payment.method,payment.transactionId].join('|'));const tx=await c.recordPayment(payment.shipmentId,payment.paymentId,Math.round(Number(payment.amount)*100),payment.method,paymentHash);const receipt=await tx.wait();const block=await c.runner.provider.getBlock(receipt.blockNumber);return{enabled:true,paymentHash,transactionHash:receipt.hash,blockNumber:receipt.blockNumber,timestamp:block?Number(block.timestamp)*1000:null,contractAddress:process.env.CONTRACT_ADDRESS};}catch(e){throw new Error(`Blockchain payment recording failed: ${e.message}`)}}\n"""
+              s=s[:j]+fn+s[j:]
+          if 'function paymentContract' not in s:
+              old='const signatureAbi=['
+              i=s.index(old)
+              j=s.index('];',i)+2
+              extra=',"function recordPayment(string calldata shipmentId,string calldata paymentId,uint256 amount,string calldata method,bytes32 paymentHash) external","function verifyPayment(string calldata paymentId) external view returns (string memory,string memory,uint256,string memory,bytes32,uint256,bool,address)"'
+              s=s[:j-2]+extra+s[j-2:]
+          if "app.post('/api/payments'" not in s:
+              marker="app.post('/api/auth/register'"
+              j=s.index(marker)
+              routes="""app.post('/api/payments',async(req,res)=>{try{const{shipmentId,customer,email,amount,method}=req.body;if(!shipmentId||!customer||!email||!amount||!method)return res.status(400).json({error:'Shipment ID, customer, email, amount and payment method are required'});const shipment=db.prepare('SELECT id FROM shipments WHERE id=?').get(shipmentId);if(!shipment)return res.status(404).json({error:'Shipment not found'});const paymentId='PAY-'+randomUUID().slice(0,8).toUpperCase(),invoiceId='INV-'+Date.now(),transactionId='TXN-'+randomUUID().slice(0,8).toUpperCase(),status=method==='Cash on Delivery'?'Pending':'Paid',createdAt=new Date().toISOString();const payment={paymentId,shipmentId,customer,email,amount:Number(amount),method,status,transactionId,invoiceId,createdAt};let chainResult={enabled:false};if(status==='Paid')chainResult=await recordPaymentOnChain(payment);const paymentHash=chainResult.paymentHash||null;db.prepare('INSERT INTO payments(id,shipment_id,customer,email,amount,method,status,transaction_id,invoice_id,blockchain_tx_hash,blockchain_status,blockchain_timestamp,blockchain_block,payment_hash,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(paymentId,shipmentId,customer,email,Number(amount),method,status,transactionId,invoiceId,chainResult.transactionHash||null,chainResult.enabled?'Verified':'Pending',chainResult.timestamp?new Date(chainResult.timestamp).toISOString():null,chainResult.blockNumber||null,paymentHash,createdAt);res.status(201).json({...payment,blockchainTxHash:chainResult.transactionHash||null,blockchainStatus:chainResult.enabled?'Verified':'Pending',blockchainTimestamp:chainResult.timestamp?new Date(chainResult.timestamp).toISOString():null,blockchainBlock:chainResult.blockNumber||null,paymentHash});}catch(e){res.status(502).json({error:e.message})}});\napp.get('/api/payments',(req,res)=>res.json(db.prepare('SELECT * FROM payments ORDER BY created_at DESC').all()));\napp.get('/api/shipments/:id/payments',(req,res)=>res.json(db.prepare('SELECT * FROM payments WHERE shipment_id=? ORDER BY created_at DESC').all(req.params.id)));\napp.get('/api/payments/:paymentId/blockchain',async(req,res)=>{try{const p=db.prepare('SELECT * FROM payments WHERE id=?').get(req.params.paymentId);if(!p)return res.status(404).json({error:'Payment not found'});const c=chain();if(!c)return res.status(503).json({error:'Blockchain is not configured'});const v=await c.verifyPayment(p.id);const verified=Boolean(v[6])&&String(v[0])===String(p.shipment_id)&&String(v[1])===String(p.id)&&(Number(v[2])===Math.round(Number(p.amount)*100));res.json({paymentId:p.id,shipmentId:p.shipment_id,amount:p.amount,method:p.method,transactionHash:p.blockchain_tx_hash,onChainHash:v[4],timestamp:Number(v[5])*1000,recordedBy:v[7],exists:Boolean(v[6]),verificationStatus:verified?'VERIFIED_ON_CHAIN':'HASH_MISMATCH',contractAddress:process.env.CONTRACT_ADDRESS});}catch(e){res.status(502).json({error:e.message})}});\n"""
+              s=s[:j]+routes+s[j:]
+          p.write_text(s)
+          PY
+      - name: Commit backend changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add server.js
+          git diff --cached --quiet || git commit -m "Connect payments to blockchain verification"
+          git push
