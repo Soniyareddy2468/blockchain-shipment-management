@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Packing Suggestor | ShipChain</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body{background:#080d18;color:#eef5ff}.packing-wrap{max-width:1120px;margin:auto;padding:55px 24px}.packing-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}.packing-card{background:#101a2a;border:1px solid #203249;border-radius:20px;padding:26px;box-shadow:0 18px 50px rgba(0,0,0,.22)}.packing-card h2{margin:0 0 8px}.packing-card p,.hint{color:#93a4bb}.field{margin:14px 0}.field label{display:block;font-weight:700;margin-bottom:6px}.field input,.field select{width:100%;box-sizing:border-box;padding:13px;border-radius:10px;border:1px solid #2a4058;background:#0b1321;color:#eef5ff}.packing-btn{margin-top:8px;width:100%;padding:14px;border:0;border-radius:10px;background:#0de0f5;color:#041018;font-weight:800;font-size:15px;cursor:pointer}.result{margin-top:20px;padding:18px;border-radius:14px;background:#0b1422;border:1px solid #203249}.result h3{margin:0 0 12px;color:#0de0f5}.result ul{padding-left:20px}.score{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px}.score div{padding:13px;background:#132238;border-radius:10px}.score b{display:block;font-size:20px}.tag{display:inline-block;padding:5px 9px;border-radius:999px;background:#12313a;color:#0de0f5;font-size:12px;font-weight:800}.tips{display:grid;gap:10px;margin-top:15px}.tip{padding:13px;border-left:3px solid #0de0f5;background:#0d1828;border-radius:8px}.nav-packing{color:#0de0f5!important}@media(max-width:800px){.packing-grid{grid-template-columns:1fr}.packing-wrap{padding:35px 18px}.score{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header class="topbar" style="background:#080d18;border-color:#182536">
+<a class="brand" href="index.html" style="color:#eef5ff">▦ ShipChain</a>
+<nav><a href="dashboard.html">Dashboard</a><a class="nav-packing" href="ai-packing.html">AI Packing</a><a href="smart-ai.html">AI Assistant</a><a href="delivery-signature.html">Digital Signature</a><a href="tracking.html">Track</a></nav>
+</header>
+<main class="packing-wrap">
+<div class="page-title"><span class="eyebrow">AI LOGISTICS INTELLIGENCE</span><h1>Smart Packing Suggestor</h1><p>Get a practical packing plan based on item type, quantity, weight, dimensions, fragility and destination conditions.</p></div>
+<div class="packing-grid">
+<section class="packing-card">
+<h2>📦 Shipment details</h2><p>Enter the shipment information and generate a recommended packing plan.</p>
+<div class="field"><label>Product / item</label><input id="item" placeholder="e.g. Electronics, glass bottles, clothes"></div>
+<div class="field"><label>Quantity</label><input id="qty" type="number" min="1" value="1"></div>
+<div class="field"><label>Total weight (kg)</label><input id="weight" type="number" min="0" step="0.1" value="5"></div>
+<div class="field"><label>Dimensions L × W × H (cm)</label><input id="dims" placeholder="40 × 30 × 25"></div>
+<div class="field"><label>Fragility</label><select id="frag"><option>Normal</option><option>Fragile</option><option>Very fragile</option></select></div>
+<div class="field"><label>Destination / handling condition</label><select id="condition"><option>Normal / dry</option><option>Rain / moisture risk</option><option>High heat</option><option>Cold / temperature-sensitive</option><option>Long-distance / multiple handoffs</option></select></div>
+<button class="packing-btn" onclick="suggestPacking()">✨ Generate AI Packing Suggestion</button>
+<div id="result" class="result" style="display:none"></div>
+</section>
+<section class="packing-card">
+<h2>🧠 Recommendation engine</h2><p>ShipChain combines your inputs into a transparent recommendation rather than pretending to have unavailable live data.</p>
+<div class="tips">
+<div class="tip"><b>1. Protect the product</b><br><span class="hint">Cushion fragile items and prevent movement inside the box.</span></div>
+<div class="tip"><b>2. Match the box</b><br><span class="hint">Use a strong carton with enough internal space for protective material.</span></div>
+<div class="tip"><b>3. Prepare for the route</b><br><span class="hint">Add moisture, heat or temperature protection when the selected condition requires it.</span></div>
+<div class="tip"><b>4. Label clearly</b><br><span class="hint">Use handling labels for fragile, upright, moisture-sensitive or temperature-sensitive shipments.</span></div>
+</div>
+<div id="summary" class="result"><span class="tag">READY</span><p class="hint">Your recommendation will appear here after you generate a plan.</p></div>
+</section>
+</div>
+</main>
+<footer style="background:#080d18;color:#93a4bb">© 2026 ShipChain · AI Packing Suggestor</footer>
+<script>
+const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function suggestPacking(){
+ const item=document.getElementById('item').value.trim()||'General goods';
+ const qty=Math.max(1,Number(document.getElementById('qty').value)||1);
+ const weight=Math.max(0,Number(document.getElementById('weight').value)||0);
+ const dims=document.getElementById('dims').value.trim()||'standard';
+ const frag=document.getElementById('frag').value;
+ const condition=document.getElementById('condition').value;
+ let box=weight>20?'Heavy-duty double-wall carton':'Corrugated carton';
+ if(frag==='Very fragile')box='Double-box reinforced carton';
+ const materials=['Bubble wrap or foam cushioning','Strong packing tape'];
+ const labels=[];
+ if(frag!=='Normal'){materials.push('Corner protectors');labels.push('FRAGILE / HANDLE WITH CARE');}
+ if(frag==='Very fragile'){materials.push('Void-fill material and inner box');labels.push('THIS SIDE UP');}
+ if(condition.includes('moisture')){materials.push('Water-resistant liner / moisture barrier');labels.push('KEEP DRY');}
+ if(condition.includes('heat')){materials.push('Reflective insulation');labels.push('PROTECT FROM HEAT');}
+ if(condition.includes('Cold')){materials.push('Insulated liner and approved cold-pack solution if required');labels.push('TEMPERATURE SENSITIVE');}
+ if(condition.includes('Long-distance')){materials.push('Extra edge protection and reinforced outer carton');labels.push('HANDLE WITH CARE');}
+ const unit=Math.max(0.5,weight/Math.max(1,qty));
+ const score=Math.max(55,Math.min(98,92-(frag==='Very fragile'?14:frag==='Fragile'?7:0)-(condition==='Normal / dry'?0:4)-(weight>20?5:0)));
+ const cost=Math.round(80+qty*18+weight*12+(frag==='Very fragile'?140:frag==='Fragile'?70:0)+(condition.includes('moisture')?45:0)+(condition.includes('heat')?55:0)+(condition.includes('Cold')?110:0));
+ let warnings=[];
+ if(weight>25)warnings.push('Use a reinforced carton and verify carrier weight limits.');
+ if(frag!=='Normal')warnings.push('Do not allow the product to move freely inside the package.');
+ if(condition!=='Normal / dry')warnings.push('The package should be protected from the selected environmental condition.');
+ document.getElementById('result').style.display='block';
+ document.getElementById('result').innerHTML=`<h3>✨ Recommended packing plan</h3><p><b>Item:</b> ${esc(item)} · <b>Quantity:</b> ${qty}</p><p><b>Primary package:</b> ${box}</p><p><b>Target dimensions:</b> ${esc(dims)} cm</p><p><b>Protective materials:</b></p><ul>${materials.map(x=>'<li>'+esc(x)+'</li>').join('')}</ul><p><b>Weight strategy:</b> Keep dense/heavy items low and centered; distribute ${unit.toFixed(1)} kg average per item where practical.</p><p><b>Labels:</b> ${labels.length?labels.join(' · '):'Standard shipping label'}</p><p><b>Estimated demo packaging cost:</b> ₹${cost.toLocaleString('en-IN')}</p>${warnings.length?'<p><b>⚠ Warnings:</b> '+warnings.join(' ')+'</p>':''}<div class="score"><div><span class="hint">Packing score</span><b>${score}/100</b></div><div><span class="hint">Protection</span><b>${frag==='Very fragile'?'Maximum':frag==='Fragile'?'High':'Standard'}</b></div><div><span class="hint">Condition</span><b>${condition==='Normal / dry'?'Dry': 'Protected'}</b></div></div>`;
+ document.getElementById('summary').innerHTML='<span class="tag">PLAN GENERATED</span><p><b>'+esc(box)+'</b> recommended for '+esc(item)+'. The plan includes '+materials.length+' protective measures and '+(labels.length||1)+' handling label(s).</p>';
+}
+</script>
+</body></html>
